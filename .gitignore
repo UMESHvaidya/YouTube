@@ -141,5 +141,8 @@ cython_debug/
 
 # Poetry
 poetry.lock
-data/
-assets/
+
+data/*
+!data/.gitkeep # Except this one file that keeps the folder in Git
+assets/*
+!assets/.gitkeep
