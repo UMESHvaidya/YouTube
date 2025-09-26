@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "youtube"
+version = "0.1.0"
+description = "YouTube project"
+authors = ["Umesh <umesh@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+moviepy = "^1.0.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
