@@ -4,8 +4,7 @@ import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing
-from moviepy import VideoFileClip, CompositeVideoClip, ImageClip
-import glob
+from moviepy.editor import VideoFileClip, CompositeVideoClip, ImageClip
 
 # Setup logging
 logging.basicConfig(
@@ -18,8 +17,8 @@ OUTPUT_DIR = "/Users/umesh/Developer/projects/youtube/data/output_videos/wisdom_
 THUMBNAIL_DIR = "/Users/umesh/Developer/projects/youtube/assets/thumbnails"  # Default thumbnail directory
 
 # Thumbnail settings
-THUMBNAIL_DURATION = 3.0  # Duration in seconds to show thumbnail at end
-THUMBNAIL_FADE_DURATION = 0.5  # Fade in/out duration
+THUMBNAIL_DURATION = 0.1  # Duration in seconds to show thumbnail at end
+THUMBNAIL_FADE_DURATION = 0.1  # Fade in/out duration
 
 # Threading configuration
 MAX_WORKERS = min(multiprocessing.cpu_count(), 4)
@@ -60,18 +59,20 @@ def add_thumbnail_to_video(input_path, output_path, thumbnail_path, duration=3.0
         thumbnail = ImageClip(thumbnail_path, duration=duration)
         thumbnail = thumbnail.resized(video_size)  # Resize to match video dimensions
         
-        # Add fade in/out effect to thumbnail
-        if fade_duration > 0:
+        # Add fade in/out effect to thumbnail (with compatibility handling)
+        if fade_duration > 0 and fade_duration < duration / 2:
             try:
-                # Try newer MoviePy methods
-                thumbnail = thumbnail.fadein(fade_duration).fadeout(fade_duration)
-            except AttributeError:
-                try:
-                    # Try alternative method names
+                # Try different fade method names for compatibility
+                if hasattr(thumbnail, 'fadein'):
+                    thumbnail = thumbnail.fadein(fade_duration).fadeout(fade_duration)
+                elif hasattr(thumbnail, 'fade_in'):
                     thumbnail = thumbnail.fade_in(fade_duration).fade_out(fade_duration)
-                except AttributeError:
-                    # If fade methods don't exist, use crossfade or skip fade
-                    thread_safe_log("Fade effects not available in this MoviePy version, using thumbnail without fade", "warning")
+                elif hasattr(thumbnail, 'crossfadein'):
+                    thumbnail = thumbnail.crossfadein(fade_duration).crossfadeout(fade_duration)
+                else:
+                    thread_safe_log("Fade effects not available, using thumbnail without fade", "warning")
+            except Exception as fade_error:
+                thread_safe_log(f"Could not apply fade effect: {fade_error}, continuing without fade", "warning")
 
         # Position thumbnail at the end of video
         thumbnail = thumbnail.with_start(video_duration)
