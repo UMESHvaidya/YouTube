@@ -149,3 +149,4 @@ assets/*
 !assets/.gitkeep
 
 **/.DS_Store
+tmp/prompt.txt
