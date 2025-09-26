@@ -12,8 +12,8 @@ logging.basicConfig(
 )
 
 # Define directories
-INPUT_DIR = "/Users/umesh/Developer/projects/youtube/data/input_videos/wisdom_waves"
-OUTPUT_DIR = "/Users/umesh/Developer/projects/youtube/data/output_videos/wisdom_waves"
+INPUT_DIR = "/Users/umesh/Developer/projects/youtube/data/input_videos/wisdom_waves/progress"
+OUTPUT_DIR = "/Users/umesh/Developer/projects/youtube/data/output_videos/wisdom_waves/upload"
 THUMBNAIL_DIR = "/Users/umesh/Developer/projects/youtube/assets/thumbnails"  # Default thumbnail directory
 
 # Thumbnail settings

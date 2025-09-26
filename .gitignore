@@ -147,3 +147,5 @@ data/*
 
 assets/*
 !assets/.gitkeep
+
+**/.DS_Store
