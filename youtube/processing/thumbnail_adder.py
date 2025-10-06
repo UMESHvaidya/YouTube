@@ -5,6 +5,9 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing
 from moviepy.editor import VideoFileClip, CompositeVideoClip, ImageClip
+import numpy as np
+from PIL import Image
+
 
 # Setup logging
 logging.basicConfig(
@@ -55,9 +58,11 @@ def add_thumbnail_to_video(input_path, output_path, thumbnail_path, duration=3.0
             video.close()
             return False
 
-        # Load and resize thumbnail to match video size
-        thumbnail = ImageClip(thumbnail_path, duration=duration)
-        thumbnail = thumbnail.resized(video_size)  # Resize to match video dimensions
+        # Load, resize with PIL, and create ImageClip
+        with Image.open(thumbnail_path) as pil_img:
+            pil_img_resized = pil_img.resize(video_size, Image.Resampling.LANCZOS)
+            img_array = np.array(pil_img_resized)
+        thumbnail = ImageClip(img_array, duration=duration)
         
         # Add fade in/out effect to thumbnail (with compatibility handling)
         if fade_duration > 0 and fade_duration < duration / 2:
@@ -75,7 +80,7 @@ def add_thumbnail_to_video(input_path, output_path, thumbnail_path, duration=3.0
                 thread_safe_log(f"Could not apply fade effect: {fade_error}, continuing without fade", "warning")
 
         # Position thumbnail at the end of video
-        thumbnail = thumbnail.with_start(video_duration)
+        thumbnail = thumbnail.set_start(video_duration)
 
         # Create final composite video
         final_video = CompositeVideoClip([video, thumbnail], size=video_size)
@@ -366,18 +371,35 @@ def main():
         process_directory()
         
     elif choice == "2":
-        video_path = input("Enter video file path: ").strip().strip('"').strip("'")
-        thumbnail_path = input("Enter thumbnail file path: ").strip().strip('"').strip("'")
-        
-        if not video_path or not thumbnail_path:
-            print("❌ Path not provided. Exiting.")
-            return
+        use_defaults = input("Use default paths? (y/n): ").strip().lower() == 'y'
+        if use_defaults:
+            # Auto-select first video and thumbnail from default directories
+            supported_extensions = [".mp4", ".avi", ".mov", ".mkv", ".m4v"]
+            video_files = [f for f in os.listdir(INPUT_DIR) if any(f.lower().endswith(ext) for ext in supported_extensions)]
+            if not video_files:
+                print(f"❌ No videos found in {INPUT_DIR}")
+                return
+            video_path = os.path.join(INPUT_DIR, video_files[0])
+            print(f"Using video: {video_files[0]}")
+
+            thumbnail_files = [f for f in os.listdir(THUMBNAIL_DIR) if f.lower().endswith(".png")]
+            if not thumbnail_files:
+                print(f"❌ No PNG thumbnails found in {THUMBNAIL_DIR}")
+                return
+            thumbnail_path = os.path.join(THUMBNAIL_DIR, thumbnail_files[0])
+            print(f"Using thumbnail: {thumbnail_files[0]}")
+        else:
+            video_path = input("Enter video file path: ").strip().strip('"').strip("'")
+            thumbnail_path = input("Enter thumbnail file path: ").strip().strip('"').strip("'")
+
+            if not video_path or not thumbnail_path:
+                print("❌ Path not provided. Exiting.")
+                return
 
         if process_single_video(video_path, thumbnail_path):
             print("✅ Thumbnail added successfully!")
         else:
             print("❌ Failed to add thumbnail.")
-            
     elif choice == "3":
         print("\n🔧 SETTINGS:")
         print(f"Current thumbnail duration: {THUMBNAIL_DURATION}s")
