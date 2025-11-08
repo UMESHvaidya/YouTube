@@ -69,18 +69,19 @@ def add_watermark_to_video(
 
         # Main watermark for entire video
         watermark_main = ImageClip(watermark_path_main, duration=duration)
-        watermark_main = watermark_main.with_position((x_pos, y_pos))
+        watermark_main = watermark_main.set_position((x_pos, y_pos))
 
         if duration <= 5:
             # If video is <=5s, use both watermarks throughout
             watermark_last = ImageClip(watermark_path_last5, duration=duration)
-            watermark_last = watermark_last.with_position((x_pos_last, y_pos_last))
+            watermark_last = watermark_last.set_position((x_pos_last, y_pos_last))
             final_video = CompositeVideoClip([video, watermark_main, watermark_last])
         else:
             # Use different watermark for last 5 seconds
             watermark_last = ImageClip(watermark_path_last5, duration=5)
-            watermark_last = watermark_last.with_position((x_pos_last, y_pos_last)).with_start(duration - 5)
+            watermark_last = watermark_last.set_position((x_pos_last, y_pos_last)).set_start(duration - 5)
             final_video = CompositeVideoClip([video, watermark_main, watermark_last])
+
 
         # Write output video
         final_video.write_videofile(
